@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosage Calculation: Concept Builder</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --liquid-color: #a2d2ff;
+            --liquid-border: #004494;
+            --glass-border: #555;
+            --text-dark: #222;
+            --btn-color: #2e7d32;
+            --btn-hover: #1b5e20;
+            --order-btn-color: #5c6bc0;
+            --order-btn-hover: #3949ab;
+            --mod4-highlight: #d81b60;
+            --success-color: #2e7d32;
+            --error-color: #d32f2f;
+            --anim-speed: 0.8s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            padding-top: 40px;
+            box-sizing: border-box;
+        }
+
+        .widget-container {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 2rem 3rem;
+            width: fit-content;
+            min-width: 400px;
+            max-width: 95%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+            max-width: 600px;
+        }
+
+        /* Compact headers */
+        #module4 .header-section, #module5 .header-section, #module6 .header-section {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Nav Buttons */
+        .nav-row { margin-top: 2rem; text-align: center; }
+        .nav-button { display: inline-block; padding: 10px 20px; font-size: 1rem; color: white; background-color: var(--btn-color); border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; margin: 0 5px; }
+        .nav-button:hover { background-color: var(--btn-hover); }
+        .nav-button.secondary { background-color: #777; }
+        
+        .legal-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; text-align: center; font-size: 0.75rem; color: #888; font-style: italic; }
+
+        /* --- SHARED STYLES --- */
+        .order-panel { margin-top: 15px; display: flex; gap: 10px; padding: 10px; background: #f0f4f8; border-radius: 6px; border: 1px dashed #ccc; }
+        .order-btn { flex: 1; padding: 10px; background-color: var(--order-btn-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        /* Fractions */
+        .formula-box { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #333; margin-top: 20px; }
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; margin: 0 8px; vertical-align: middle; }
+        .numerator { border-bottom: 2px solid #333; padding: 0 5px; display: block; width: 100%; text-align: center; }
+        .denominator { padding: 0 5px; display: block; width: 100%; text-align: center; }
+
+        /* Syringe Styles */
+        .apparatus-row { display: flex; align-items: flex-start; justify-content: center; }
+        .left-assembly { display: flex; align-items: center; padding-top: 15px; position: relative; z-index: 2; }
+        .vial { width: 110px; height: 90px; border: 2px solid var(--glass-border); border-radius: 8px 4px 4px 8px; background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(230,230,230,0.5) 100%); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); margin-right: -2px; }
+        .vial-label { background: #fff; border: 1px solid #999; padding: 4px 8px; text-align: center; font-weight: bold; font-size: 0.85rem; line-height: 1.2; }
+        .vial-stopper { width: 12px; height: 50px; background-color: #999; border: 1px solid #666; border-left: none; border-radius: 0 4px 4px 0; position: relative; z-index: 3; }
+        .needle { width: 50px; height: 4px; background-color: #777; margin-right: -2px; z-index: 1; }
+        .right-assembly { display: flex; flex-direction: column; width: 450px; position: relative; }
+        .syringe-barrel { height: 70px; width: 100%; border: 3px solid var(--glass-border); border-left: 6px solid #444; border-radius: 4px 8px 8px 4px; background: rgba(255,255,255,0.4); position: relative; box-sizing: border-box; display: flex; align-items: center; }
+        .liquid { height: 100%; background-color: var(--liquid-color); width: 0%; border-right: 4px solid var(--liquid-border); position: relative; overflow: visible; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        
+        .dose-label-internal { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; font-weight: bold; font-size: 1.1rem; pointer-events: none; }
+        
+        .dose-label-internal.inside {
+            right: 10px;
+            color: #003366;
+        }
+        
+        .dose-label-internal.outside {
+            left: 100%;
+            margin-left: 8px;
+            color: #333;
+        }
+
+        .ticks-container { position: relative; width: 100%; height: 30px; margin-bottom: 2px; }
+        .tick { position: absolute; bottom: 0; width: 2px; background-color: #333; transform: translateX(-50%); }
+        .tick.major { height: 15px; }
+        .tick.minor { height: 8px; }
+        .tick-number { position: absolute; top: -20px; transform: translateX(-50%); font-size: 0.9rem; font-weight: bold; color: #333; }
+        .slider-wrapper { width: 100%; margin-top: 10px; position: relative; height: 30px; }
+        input[type=range] { -webkit-appearance: none; width: 100%; margin: 0; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #ddd; border-radius: 3px; border: 1px solid #aaa; }
+        input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--primary-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .readout-panel { margin-top: 25px; background: #eef; padding: 15px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; min-height: 25px; }
+
+        /* --- MOD 4 & 5 STYLES --- */
+        .converter-container { display: flex; flex-direction: column; align-items: center; padding: 10px 20px; }
+        .input-group { margin-bottom: 15px; text-align: center; }
+        .dose-input { font-size: 2rem; padding: 10px; width: 150px; text-align: center; border: 2px solid var(--mod4-highlight); border-radius: 8px; color: var(--mod4-highlight); font-weight: bold; }
+        .unit-scale-wrapper { position: relative; width: 100%; max-width: 500px; height: 80px; display: flex; flex-direction: column; justify-content: flex-end; margin-bottom: 20px; }
+        .unit-track { display: flex; justify-content: space-between; align-items: baseline; width: 100%; padding: 0 10px; box-sizing: border-box; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 1.2rem; user-select: none; }
+        .unit-label { position: relative; width: 40px; text-align: center; }
+        .unit-label.active { color: var(--mod4-highlight); transform: scale(1.2); transition: all 0.2s; }
+        .dot { font-size: 2rem; color: #ccc; line-height: 0; transform: translateY(-5px); }
+        .scalloped-slider { -webkit-appearance: none; width: 100%; background: transparent; z-index: 2; }
+        .scalloped-slider::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: #e0e0e0; border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+        .scalloped-slider::-webkit-slider-thumb { height: 28px; width: 28px; border-radius: 50%; background: var(--mod4-highlight); cursor: pointer; -webkit-appearance: none; margin-top: -9px; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        .result-display { margin-top: 5px; font-size: 2.5rem; color: var(--text-dark); height: 50px; display: flex; align-items: center; justify-content: center; }
+        .result-unit { color: #777; font-size: 1.5rem; margin-left: 10px; }
+        
+        .scenario-box { 
+            background-color: #e3f2fd; 
+            border: 1px solid #90caf9; 
+            color: #0d47a1; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            font-weight: 500; 
+        }
+
+        #module5 .scenario-box { margin-bottom: 5px; }
+        #module5 .converter-container { padding-top: 0; }
+
+        /* --- MODULE 6 SPECIFIC --- */
+        .da-container {
+            position: relative;
+            min-height: 140px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .formula-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            z-index: 10;
+            transition: opacity 0.5s;
+        }
+        
+        .overlay-fraction-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 10px;
+            transition: transform 0.8s ease-in-out;
+        }
+        
+        .overlay-mult {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #444;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        .slide-left { transform: translateX(-120px); }
+        .slide-right { transform: translateX(120px); }
+
+        .da-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .da-track.visible { opacity: 1; }
+
+        .da-part { position: relative; z-index: 2; }
+
+        .da-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            vertical-align: middle;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .da-numerator {
+            border-bottom: 3px solid #333;
+            padding: 0 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .da-denominator {
+            padding: 0 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .ghost-num { opacity: 0; color: #999; transition: opacity 1s; }
+        .da-track.visible .ghost-num { opacity: 1; }
+
+        .bridge-gap {
+            width: 120px;
+            height: 80px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            margin: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #aaa;
+            transition: all 0.3s;
+        }
+        .bridge-gap.drag-over { background-color: #e8f5e9; border-color: #4caf50; transform: scale(1.05); }
+
+        .tile-tray {
+            height: 80px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .conv-tile {
+            background: #fff;
+            border: 2px solid var(--order-btn-color);
+            border-radius: 8px;
+            padding: 5px 15px;
+            cursor: grab;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            user-select: none;
+        }
+        .conv-tile:active { cursor: grabbing; }
+
+        .mult-x { font-size: 1.5rem; color: #777; margin: 0 5px; }
+        
+        .unit-match { color: #d32f2f; font-weight: 800; }
+        .math-highlight { color: var(--primary-blue); transform: scale(1.1); display: inline-block; }
+
+        @media (max-width: 700px) {
+            .widget-container { transform-origin: top center; transform: scale(0.8); margin-top: 0; }
+        }
+        @media (max-width: 500px) {
+            body { padding-top: 10px; }
+            .widget-container { transform: scale(0.55); padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="module1" class="widget-container">
+    <div class="header-section"><h2>Module 1: Basic Concentration</h2><p>Drag the slider. Observe how <strong>mL</strong> equals <strong>mg</strong>.</p></div>
+    <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">1 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m1"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m1"><span class="dose-label-internal" id="label_m1"></span></div></div><div class="slider-wrapper"><input type="range" id="slider_m1" min="0" max="5" step="0.5" value="0"></div><div class="readout-panel" aria-live="polite"><span>Volume: <span id="vol_m1">0.0</span> mL</span><span>Dose: <span id="dose_m1">0.0</span> mg</span></div></div></div>
+    <div class="nav-row"><button class="nav-button" onclick="switchModule(2)">Next Module ➔</button></div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<div id="module2" class="widget-container" style="display:none;">
+    <div class="header-section"><h2>Module 2: Higher Concentration</h2><p>Now, notice how <strong>1 mL</strong> equals <strong>2 mg</strong> of drug.</p></div>
+    <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">2 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m2"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m2"><span class="dose-label-internal" id="label_m2"></span></div></div><div class="slider-wrapper"><input type="range" id="slider_m2" min="0" max="5" step="0.5" value="0"></div><div class="readout-panel" aria-live="polite"><span>Volume: <span id="vol_m2">0.0</span> mL</span><span>Dose: <span id="dose_m2">0.0</span> mg</span></div></div></div>
+    <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(1)">Back</button><button class="nav-button" onclick="switchModule(3)">Next Module ➔</button></div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<div id="module3" class="widget-container" style="display:none;">
+    <div class="header-section"><h2>Module 3: Order Simulation</h2><p>Select a <strong>Provider Order</strong> below. See the Desired over Have equation.</p></div>
+    <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">2 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m3"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m3"><span class="dose-label-internal" id="label_m3"></span></div></div><div class="order-panel"><button class="order-btn" onclick="runOrder(4)">Order: 4 mg</button><button class="order-btn" onclick="runOrder(6)">Order: 6 mg</button><button class="order-btn" onclick="runOrder(8)">Order: 8 mg</button></div><div class="readout-panel" id="formula_m3" aria-live="polite" style="justify-content: center; text-align: center;"><span style="color:#666; font-weight:normal;">Select an order above...</span></div></div></div>
+    <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(2)">Back</button><button class="nav-button" onclick="switchModule(4)">Next Module ➔</button></div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<div id="module4" class="widget-container" style="display:none;">
+    <div class="header-section"><h2>Module 4: Unit Conversion</h2><p>Enter a starting dose in <strong>mg</strong>. Move the slider to shift the decimal point.</p></div>
+    <div class="converter-container"><div class="input-group"><label for="startDose" style="display:block; margin-bottom:5px; color:#666;">Starting Dose (mg)</label><input type="number" id="startDose" class="dose-input" value="5" min="0" placeholder="0"></div><div class="unit-scale-wrapper"><div class="unit-track"><div class="unit-label" id="lbl_g">g</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label active" id="lbl_mg">mg</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_mcg">mcg</div></div><input type="range" id="slider_m4" class="scalloped-slider" min="0" max="6" step="1" value="3"></div><div class="result-display" aria-live="polite"><span id="result_num">5</span><span id="result_unit" class="result-unit">mg</span></div></div>
+    <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(3)">Back</button><button class="nav-button" onclick="switchModule(5)">Next Module ➔</button></div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<div id="module5" class="widget-container" style="display:none;">
+    <div class="header-section"><h2>Module 5: Conversion Example</h2><p>Use the slider to convert the Order to <strong>mg</strong> to match what you Have.</p></div>
+    <div class="scenario-box"><div><strong>Order:</strong> 2 g by mouth daily</div><div><strong>Have:</strong> 500 mg tabs</div></div>
+    <div class="converter-container"><div class="unit-scale-wrapper"><div class="unit-track"><div class="unit-label active" id="lbl_m5_g">g</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_m5_mg">mg</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_m5_mcg">mcg</div></div><input type="range" id="slider_m5" class="scalloped-slider" min="0" max="6" step="1" value="0"></div><div class="formula-box"><div class="fraction"><span class="numerator" id="num_m5">2 g</span><span class="denominator">500 mg</span></div><span>&times; 1 tab =&nbsp;</span><strong id="result_m5" style="font-size:1.4rem; color:#888;">...</strong></div></div>
+    <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(4)">Back</button><button class="nav-button" onclick="switchModule(6)">Next Module ➔</button></div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<div id="module6" class="widget-container" style="display:none;">
+    <div class="header-section">
+        <h2>Module 6: Dimensional Analysis</h2>
+        <p>Here is the same equation. Let's <strong>"Pull it Apart"</strong> to handle the conversion.</p>
+    </div>
+
+    <div class="scenario-box">
+        <div><strong>Order:</strong> 2 g</div>
+        <div><strong>Have:</strong> 500 mg / 1 tab</div>
+    </div>
+
+    <div class="da-container">
+        
+        <div id="formulaOverlay" class="formula-overlay">
+            <div class="overlay-fraction-group" id="overlayGroup">
+                <div class="da-fraction">
+                    <span class="da-numerator" style="border-bottom: 3px solid #333;">2 g</span>
+                    <span class="da-denominator">500 mg</span>
+                </div>
+            </div>
+            <div class="overlay-mult" id="overlayMult">
+                &times; 1 tab
+            </div>
+        </div>
+
+        <div class="da-track" id="daTrack">
+            <div class="da-part">
+                <div class="da-fraction">
+                    <span class="da-numerator" id="numerator1"><span id="val1">2</span> <span id="unit1">g</span></span>
+                    <span class="da-denominator ghost-num">1</span>
+                </div>
+            </div>
+
+            <span class="mult-x">&times;</span>
+
+            <div class="bridge-gap" id="bridgeGap">Drop Here</div>
+
+            <span class="mult-x">&times;</span>
+
+            <div class="da-part">
+                <div class="da-fraction">
+                    <span class="da-numerator ghost-num">1 tab</span>
+                    <span class="da-denominator" id="denominator3">500 <span id="unit3">mg</span></span>
+                </div>
+            </div>
+
+            <span style="font-size:1.5rem; margin-left:10px;">= &nbsp;</span>
+            <strong id="finalResult" style="font-size:1.5rem; color:#888;">?</strong>
+        </div>
+    </div>
+
+    <div class="tile-tray" id="tileTray" style="display:none;">
+        <div class="conv-tile" id="convTile" draggable="true">
+            <div class="da-fraction" style="font-size:1rem;">
+                <span class="da-numerator">1000 mg</span>
+                <span class="da-denominator">1 g</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-row">
+        <button class="nav-button secondary" onclick="switchModule(5)">Back</button>
+        <button id="btnExpand" class="nav-button" onclick="expandEquation()">Deconstruct Formula</button>
+        <button id="btnReset6" class="nav-button secondary" style="display:none;" onclick="resetMod6()">Reset</button>
+    </div>
+    <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+</div>
+
+<script>
+    const MAX_VOL = 5;
+
+    // --- SHARED FUNCTIONS ---
+    function createTicks(containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; 
+        for (let i = 0; i <= MAX_VOL; i += 0.5) {
+            const isMajor = Number.isInteger(i);
+            const leftPos = (i / MAX_VOL) * 100;
+            const tick = document.createElement('div');
+            tick.className = `tick ${isMajor ? 'major' : 'minor'}`;
+            tick.style.left = `${leftPos}%`;
+            container.appendChild(tick);
+            if (isMajor) {
+                const num = document.createElement('div');
+                num.className = 'tick-number';
+                num.textContent = i;
+                num.style.left = `${leftPos}%`;
+                container.appendChild(num);
+            }
+        }
+    }
+
+    function updateVisuals(moduleId, vol, dose) {
+        const liquid = document.getElementById(`liquid_${moduleId}`);
+        const label = document.getElementById(`label_${moduleId}`);
+        const volDisplay = document.getElementById(`vol_${moduleId}`);
+        const doseDisplay = document.getElementById(`dose_${moduleId}`);
+
+        const percentage = (vol / MAX_VOL) * 100;
+        liquid.style.width = `${percentage}%`;
+        
+        if(volDisplay) volDisplay.textContent = vol.toFixed(1);
+        if(doseDisplay) doseDisplay.textContent = parseFloat(dose.toFixed(2));
+
+        if (vol > 0) {
+            label.style.display = 'block';
+            label.textContent = `${parseFloat(dose.toFixed(2))} mg`;
+            // Logic to switch class based on width
+            if (vol < 1.5) {
+                label.classList.remove('inside');
+                label.classList.add('outside');
+            } else {
+                label.classList.remove('outside');
+                label.classList.add('inside');
+            }
+        } else {
+            label.style.display = 'none';
+        }
+    }
+
+    // --- MODULE 1 & 2 ---
+    function updateApparatus(moduleId, concentrationFactor) {
+        const slider = document.getElementById(`slider_${moduleId}`);
+        const vol = parseFloat(slider.value);
+        const dose = vol * concentrationFactor; 
+        updateVisuals(moduleId, vol, dose);
+    }
+
+    // --- MODULE 3 ---
+    function runOrder(orderedDose) {
+        const concentration = 2; // 2 mg/mL
+        const vol = orderedDose / concentration; 
+        
+        updateVisuals('m3', vol, orderedDose);
+
+        // Turn "2 mg" on the Vial BLUE
+        const mod3VialLabel = document.querySelector('#module3 .vial-label');
+        if(mod3VialLabel) {
+            mod3VialLabel.innerHTML = '<span style="color:var(--primary-blue)">2 mg</span> / 1 mL';
+        }
+
+        // Update Formula: Order=Red, Have=Blue, Result=Green
+        const formulaContainer = document.getElementById('formula_m3');
+        formulaContainer.innerHTML = `
+            <div class="formula-box">
+                <span style="margin-right:8px; color:#555;">Formula:</span>
+                <div class="fraction">
+                    <span class="numerator" style="color:var(--error-color); font-weight:bold;">${orderedDose} mg</span>
+                    <span class="denominator" style="color:var(--primary-blue); font-weight:bold;">2 mg</span>
+                </div>
+                <span>&times; 1 mL = <strong style="color:var(--success-color); font-size:1.3rem;">${vol} mL</strong></span>
+            </div>`;
+    }
+
+    // --- MODULE 4 ---
+    function updateConverter() {
+        const startVal = parseFloat(document.getElementById('startDose').value) || 0;
+        const sliderVal = parseInt(document.getElementById('slider_m4').value);
+        const powerDiff = sliderVal - 3;
+        const multiplier = Math.pow(10, powerDiff);
+        let result = startVal * multiplier;
+        result = parseFloat(result.toPrecision(12)); 
+        document.getElementById('result_num').textContent = result;
+        document.getElementById('lbl_g').classList.remove('active');
+        document.getElementById('lbl_mg').classList.remove('active');
+        document.getElementById('lbl_mcg').classList.remove('active');
+        document.getElementById('result_unit').style.opacity = '0.5';
+        let currentUnit = "";
+        if(sliderVal === 0) { currentUnit = "g"; document.getElementById('lbl_g').classList.add('active'); document.getElementById('result_unit').style.opacity = '1'; }
+        else if (sliderVal === 3) { currentUnit = "mg"; document.getElementById('lbl_mg').classList.add('active'); document.getElementById('result_unit').style.opacity = '1'; }
+        else if (sliderVal === 6) { currentUnit = "mcg"; document.getElementById('lbl_mcg').classList.add('active'); document.getElementById('result_unit').style.opacity = '1'; }
+        document.getElementById('result_unit').textContent = currentUnit;
+    }
+
+    // --- MODULE 5 ---
+    function updateMod5() {
+        const sliderVal = parseInt(document.getElementById('slider_m5').value);
+        const numEl = document.getElementById('num_m5');
+        const resEl = document.getElementById('result_m5');
+        let val = 2 * Math.pow(10, sliderVal);
+        document.getElementById('lbl_m5_g').classList.remove('active');
+        document.getElementById('lbl_m5_mg').classList.remove('active');
+        document.getElementById('lbl_m5_mcg').classList.remove('active');
+        let unitSuffix = ""; let color = "#333";
+        if(sliderVal === 0) { document.getElementById('lbl_m5_g').classList.add('active'); unitSuffix = " g"; }
+        else if (sliderVal === 3) { document.getElementById('lbl_m5_mg').classList.add('active'); unitSuffix = " mg"; color = "var(--mod4-highlight)"; }
+        else if (sliderVal === 6) { document.getElementById('lbl_m5_mcg').classList.add('active'); unitSuffix = " mcg"; }
+        numEl.textContent = val + unitSuffix;
+        numEl.style.color = color;
+        numEl.style.fontWeight = sliderVal === 3 ? "bold" : "normal";
+        if(sliderVal === 3) {
+            const tabs = val / 500;
+            resEl.textContent = tabs + " tabs";
+            resEl.style.color = "var(--success-color)";
+        } else {
+            resEl.textContent = "...";
+            resEl.style.color = "#888";
+        }
+    }
+
+    // --- MODULE 6: THE BRIDGE LOGIC ---
+    let isExpanded = false;
+    
+    function expandEquation() {
+        if(isExpanded) return;
+        isExpanded = true;
+        document.getElementById('btnExpand').style.display = 'none';
+
+        // 1. Animate the Overlay parts apart
+        document.getElementById('overlayGroup').classList.add('slide-left');
+        document.getElementById('overlayMult').classList.add('slide-right');
+
+        // 2. Fade out Overlay, Fade in DA Track
+        setTimeout(() => {
+            document.getElementById('formulaOverlay').style.opacity = '0';
+            document.getElementById('daTrack').classList.add('visible');
+            
+            // Allow pointer events to pass through invisible overlay
+            setTimeout(() => {
+                document.getElementById('formulaOverlay').style.display = 'none';
+                document.getElementById('tileTray').style.display = 'flex';
+            }, 500);
+        }, 600);
+    }
+
+    // Drag and Drop Logic
+    const tile = document.getElementById('convTile');
+    const gap = document.getElementById('bridgeGap');
+
+    tile.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', 'tile');
+        setTimeout(() => tile.style.opacity = '0.5', 0);
+    });
+
+    tile.addEventListener('dragend', () => {
+        tile.style.opacity = '1';
+    });
+
+    gap.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        gap.classList.add('drag-over');
+    });
+
+    gap.addEventListener('dragleave', () => {
+        gap.classList.remove('drag-over');
+    });
+
+    gap.addEventListener('drop', (e) => {
+        e.preventDefault();
+        gap.classList.remove('drag-over');
+        
+        // Visual Logic for "Drop"
+        gap.innerHTML = ''; 
+        
+        // Create the slated tile element inside the gap
+        const newTile = document.createElement('div');
+        newTile.className = 'da-fraction';
+        newTile.style.fontSize = '1.4rem';
+        newTile.innerHTML = `
+            <span class="da-numerator math-highlight">1000 mg</span>
+            <span class="da-denominator unit-match">1 g</span>
+        `;
+        gap.appendChild(newTile);
+        gap.style.border = '2px solid var(--success-color)';
+        
+        // Hide original draggable
+        tile.style.display = 'none';
+
+        // Trigger Solution Animation
+        setTimeout(solveMod6, 500);
+    });
+
+    function solveMod6() {
+        const unit1 = document.getElementById('unit1');
+        const val1 = document.getElementById('val1');
+        const denom3 = document.getElementById('denominator3');
+        
+        // 1. Color the Start Unit (g) and its Value (2) RED
+        unit1.classList.add('unit-match');
+        val1.classList.add('unit-match');
+        
+        // 2. Color the End Denominator (500 mg) BLUE
+        denom3.style.color = "var(--primary-blue)";
+        denom3.style.fontWeight = "bold";
+
+        const res = document.getElementById('finalResult');
+        res.textContent = "4 tabs";
+        res.style.color = "var(--success-color)";
+        res.style.transform = "scale(1.2)";
+        res.style.transition = "all 0.3s";
+
+        document.getElementById('btnReset6').style.display = 'inline-block';
+    }
+
+    function resetMod6() {
+        isExpanded = false;
+        
+        // Reset styles
+        document.getElementById('formulaOverlay').style.display = 'flex';
+        // Need brief delay to allow display:flex to apply before opacity transition
+        setTimeout(() => {
+            document.getElementById('formulaOverlay').style.opacity = '1';
+            document.getElementById('overlayGroup').classList.remove('slide-left');
+            document.getElementById('overlayMult').classList.remove('slide-right');
+        }, 50);
+
+        document.getElementById('daTrack').classList.remove('visible');
+        document.getElementById('bridgeGap').innerHTML = 'Drop Here';
+        document.getElementById('bridgeGap').style.border = '2px dashed #ccc';
+        document.getElementById('tileTray').style.display = 'none';
+        document.getElementById('convTile').style.display = 'block';
+        document.getElementById('convTile').style.opacity = '1';
+        document.getElementById('btnExpand').style.display = 'inline-block';
+        document.getElementById('btnReset6').style.display = 'none';
+        
+        document.getElementById('finalResult').textContent = '?';
+        document.getElementById('finalResult').style.color = '#888';
+        document.getElementById('finalResult').style.transform = "scale(1)";
+
+        // Remove Colors
+        document.getElementById('unit1').classList.remove('unit-match');
+        const val1 = document.getElementById('val1');
+        if(val1) val1.classList.remove('unit-match');
+
+        const denom3 = document.getElementById('denominator3');
+        if(denom3) {
+            denom3.style.color = "";
+            denom3.style.fontWeight = "";
+        }
+    }
+
+    // --- NAVIGATION LOGIC ---
+    function switchModule(modNum) {
+        for(let i=1; i<=6; i++) {
+            const el = document.getElementById('module'+i);
+            if(el) el.style.display = 'none';
+        }
+        document.getElementById('module' + modNum).style.display = 'block';
+        
+        if(modNum === 1) {
+            document.getElementById('slider_m1').value = 0;
+            updateApparatus('m1', 1);
+        } else if(modNum === 2) {
+            document.getElementById('slider_m2').value = 0;
+            updateApparatus('m2', 2);
+        } else if(modNum === 3) {
+            updateVisuals('m3', 0, 0);
+            document.getElementById('formula_m3').innerHTML = '<span style="color:#666; font-weight:normal;">Select an order above...</span>';
+            // Optional: reset vial color if needed when entering mod 3
+            // document.querySelector('#module3 .vial-label').innerHTML = '2 mg / 1 mL';
+        } else if(modNum === 4) {
+            document.getElementById('startDose').value = 5;
+            document.getElementById('slider_m4').value = 3;
+            updateConverter();
+        } else if (modNum === 5) {
+            document.getElementById('slider_m5').value = 0;
+            updateMod5();
+        } else if (modNum === 6) {
+            resetMod6();
+        }
+    }
+
+    // --- INITIALIZATION ---
+    createTicks('ticks_m1');
+    document.getElementById('slider_m1').addEventListener('input', () => updateApparatus('m1', 1));
+    updateApparatus('m1', 1);
+
+    createTicks('ticks_m2');
+    document.getElementById('slider_m2').addEventListener('input', () => updateApparatus('m2', 2));
+    updateApparatus('m2', 2);
+
+    createTicks('ticks_m3');
+    updateVisuals('m3', 0, 0);
+
+    document.getElementById('slider_m4').addEventListener('input', updateConverter);
+    document.getElementById('startDose').addEventListener('input', updateConverter);
+    document.getElementById('slider_m5').addEventListener('input', updateMod5);
+
+</script>
+
+</body>
+</html>
