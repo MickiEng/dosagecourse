@@ -273,6 +273,23 @@
             body { padding-top: 10px; }
             .widget-container { transform: scale(0.55); padding: 1rem; }
         }
+
+        /* --- FIXES FOR MOBILE --- */
+        @media (max-width: 600px) {
+          /* Force ONLY Module 3 to be wider so text fits on one line */
+          #module3.widget-container {
+              min-width: 650px !important; 
+              width: 650px !important;
+              padding-left: 5px !important;
+              padding-right: 5px !important;
+              margin-left: -50px; /* Shift left to center the wider box */
+          }
+
+          #formula_m3 {
+              width: 100%;
+              justify-content: center;
+          }
+        }
     </style>
 </head>
 <body>
@@ -661,8 +678,6 @@
         } else if(modNum === 3) {
             updateVisuals('m3', 0, 0);
             document.getElementById('formula_m3').innerHTML = '<span style="color:#666; font-weight:normal;">Select an order above...</span>';
-            // Optional: reset vial color if needed when entering mod 3
-            // document.querySelector('#module3 .vial-label').innerHTML = '2 mg / 1 mL';
         } else if(modNum === 4) {
             document.getElementById('startDose').value = 5;
             document.getElementById('slider_m4').value = 3;
@@ -673,6 +688,65 @@
         } else if (modNum === 6) {
             resetMod6();
         }
+    }
+
+    // --- MOBILE TOUCH DRAG SUPPORT (ADDED) ---
+    function enableMobileDrag() {
+        const tile = document.getElementById('convTile');
+        const gap = document.getElementById('bridgeGap');
+        let startX, startY;
+
+        // 1. Touch Start
+        tile.addEventListener('touchstart', function(e) {
+            e.preventDefault(); 
+            const touch = e.touches[0];
+            const rect = tile.getBoundingClientRect();
+            
+            tile.style.position = 'fixed';
+            tile.style.left = rect.left + 'px';
+            tile.style.top = rect.top + 'px';
+            tile.style.zIndex = '1000';
+            tile.style.width = rect.width + 'px'; 
+            
+            startX = touch.clientX - rect.left;
+            startY = touch.clientY - rect.top;
+        }, {passive: false});
+
+        // 2. Touch Move
+        tile.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            tile.style.left = (touch.clientX - startX) + 'px';
+            tile.style.top = (touch.clientY - startY) + 'px';
+        }, {passive: false});
+
+        // 3. Touch End
+        tile.addEventListener('touchend', function(e) {
+            const touch = e.changedTouches[0];
+            tile.style.display = 'none';
+            let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            tile.style.display = 'block';
+
+            if (elemBelow && (elemBelow === gap || gap.contains(elemBelow))) {
+                gap.classList.remove('drag-over');
+                gap.innerHTML = ''; 
+                const newTile = document.createElement('div');
+                newTile.className = 'da-fraction';
+                newTile.style.fontSize = '1.4rem';
+                newTile.innerHTML = `<span class="da-numerator math-highlight">1000 mg</span><span class="da-denominator unit-match">1 g</span>`;
+                gap.appendChild(newTile);
+                gap.style.border = '2px solid var(--success-color)';
+                tile.style.display = 'none';
+                tile.style.position = ''; 
+                setTimeout(solveMod6, 500);
+            } else {
+                tile.style.position = '';
+                tile.style.left = '';
+                tile.style.top = '';
+                tile.style.zIndex = '';
+                tile.style.width = '';
+            }
+        });
     }
 
     // --- INITIALIZATION ---
@@ -690,6 +764,9 @@
     document.getElementById('slider_m4').addEventListener('input', updateConverter);
     document.getElementById('startDose').addEventListener('input', updateConverter);
     document.getElementById('slider_m5').addEventListener('input', updateMod5);
+    
+    // Enable Mobile Drag Support
+    enableMobileDrag();
 
 </script>
 
