@@ -301,30 +301,7 @@
               justify-content: center;
           }
         }
-        /* Desktop: Pins logo to the top-right corner of the widget card */
-.widget-logo {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    max-height: 45px;
-    width: auto;
-    z-index: 100;
-}
-
-/* Mobile: Moves logo to the bottom-center under the legend */
-@media screen and (max-width: 600px) {
-    .widget-logo {
-        position: static !important;
-        display: block !important;
-        margin: 20px auto 10px auto !important;
-        max-height: 35px !important;
-    }
-    
-    .lms-widget {
-        position: relative; /* "Traps" the logo in the top-right on desktop */
-        padding-top: 45px;  /* Space for logo on desktop so it won't hit the title */
-    }
-}
+        
     </style>
 </head>
 <body>
@@ -717,7 +694,7 @@
     document.getElementById('slider_m4').addEventListener('input', updateConverter);
     document.getElementById('startDose').addEventListener('input', updateConverter);
     document.getElementById('slider_m5').addEventListener('input', updateMod5);
-   <img src="beal_logo_blue_sm.webp." alt="Beal University Logo" class="widget-logo"> 
+   
 </script>
 
 </body>
