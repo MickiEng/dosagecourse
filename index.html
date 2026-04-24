@@ -240,7 +240,20 @@
             color: #aaa;
             transition: all 0.3s;
         }
-        .bridge-gap.drag-over { background-color: #e8f5e9; border-color: #4caf50; transform: scale(1.05); }
+        
+        /* New Click-to-Place states */
+        .conv-tile.selected {
+            border: 3px solid var(--primary-blue);
+            box-shadow: 0 0 10px rgba(0, 86, 179, 0.4);
+            transform: scale(1.05);
+        }
+
+        .bridge-gap.ready-to-receive {
+            border: 2px dashed var(--primary-blue) !important;
+            background-color: #e8f0fe !important;
+            color: var(--primary-blue) !important;
+            cursor: pointer;
+        }
 
         .tile-tray {
             height: 80px;
@@ -254,12 +267,11 @@
             border: 2px solid var(--order-btn-color);
             border-radius: 8px;
             padding: 5px 15px;
-            cursor: grab;
+            cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            transition: all 0.2s;
             user-select: none;
         }
-        .conv-tile:active { cursor: grabbing; }
 
         .mult-x { font-size: 1.5rem; color: #777; margin: 0 5px; }
         
@@ -276,13 +288,12 @@
 
         /* --- FIXES FOR MOBILE --- */
         @media (max-width: 600px) {
-          /* Force ONLY Module 3 to be wider so text fits on one line */
           #module3.widget-container {
               min-width: 650px !important; 
               width: 650px !important;
               padding-left: 5px !important;
               padding-right: 5px !important;
-              margin-left: -50px; /* Shift left to center the wider box */
+              margin-left: -50px;
           }
 
           #formula_m3 {
@@ -365,7 +376,7 @@
 
             <span class="mult-x">&times;</span>
 
-            <div class="bridge-gap" id="bridgeGap">Drop Here</div>
+            <div class="bridge-gap" id="bridgeGap">Tap tile</div>
 
             <span class="mult-x">&times;</span>
 
@@ -382,7 +393,7 @@
     </div>
 
     <div class="tile-tray" id="tileTray" style="display:none;">
-        <div class="conv-tile" id="convTile" draggable="true">
+        <div class="conv-tile" id="convTile">
             <div class="da-fraction" style="font-size:1rem;">
                 <span class="da-numerator">1000 mg</span>
                 <span class="da-denominator">1 g</span>
@@ -437,7 +448,6 @@
         if (vol > 0) {
             label.style.display = 'block';
             label.textContent = `${parseFloat(dose.toFixed(2))} mg`;
-            // Logic to switch class based on width
             if (vol < 1.5) {
                 label.classList.remove('inside');
                 label.classList.add('outside');
@@ -460,18 +470,16 @@
 
     // --- MODULE 3 ---
     function runOrder(orderedDose) {
-        const concentration = 2; // 2 mg/mL
+        const concentration = 2; 
         const vol = orderedDose / concentration; 
         
         updateVisuals('m3', vol, orderedDose);
 
-        // Turn "2 mg" on the Vial BLUE
         const mod3VialLabel = document.querySelector('#module3 .vial-label');
         if(mod3VialLabel) {
             mod3VialLabel.innerHTML = '<span style="color:var(--primary-blue)">2 mg</span> / 1 mL';
         }
 
-        // Update Formula: Order=Red, Have=Blue, Result=Green
         const formulaContainer = document.getElementById('formula_m3');
         formulaContainer.innerHTML = `
             <div class="formula-box">
@@ -530,24 +538,22 @@
         }
     }
 
-    // --- MODULE 6: THE BRIDGE LOGIC ---
+    // --- MODULE 6: THE BRIDGE LOGIC (CLICK-TO-PLACE) ---
     let isExpanded = false;
+    let tileSelected = false;
     
     function expandEquation() {
         if(isExpanded) return;
         isExpanded = true;
         document.getElementById('btnExpand').style.display = 'none';
 
-        // 1. Animate the Overlay parts apart
         document.getElementById('overlayGroup').classList.add('slide-left');
         document.getElementById('overlayMult').classList.add('slide-right');
 
-        // 2. Fade out Overlay, Fade in DA Track
         setTimeout(() => {
             document.getElementById('formulaOverlay').style.opacity = '0';
             document.getElementById('daTrack').classList.add('visible');
             
-            // Allow pointer events to pass through invisible overlay
             setTimeout(() => {
                 document.getElementById('formulaOverlay').style.display = 'none';
                 document.getElementById('tileTray').style.display = 'flex';
@@ -555,36 +561,24 @@
         }, 600);
     }
 
-    // Drag and Drop Logic
     const tile = document.getElementById('convTile');
     const gap = document.getElementById('bridgeGap');
 
-    tile.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', 'tile');
-        setTimeout(() => tile.style.opacity = '0.5', 0);
-    });
+    // Select the Tile
+    tile.onclick = function() {
+        tileSelected = true;
+        tile.classList.add('selected');
+        gap.classList.add('ready-to-receive');
+        gap.textContent = "Tap here to place";
+    };
 
-    tile.addEventListener('dragend', () => {
-        tile.style.opacity = '1';
-    });
+    // Place in the Gap
+    gap.onclick = function() {
+        if (!tileSelected) return;
 
-    gap.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        gap.classList.add('drag-over');
-    });
-
-    gap.addEventListener('dragleave', () => {
-        gap.classList.remove('drag-over');
-    });
-
-    gap.addEventListener('drop', (e) => {
-        e.preventDefault();
-        gap.classList.remove('drag-over');
-        
-        // Visual Logic for "Drop"
         gap.innerHTML = ''; 
+        gap.classList.remove('ready-to-receive');
         
-        // Create the slated tile element inside the gap
         const newTile = document.createElement('div');
         newTile.className = 'da-fraction';
         newTile.style.fontSize = '1.4rem';
@@ -595,23 +589,18 @@
         gap.appendChild(newTile);
         gap.style.border = '2px solid var(--success-color)';
         
-        // Hide original draggable
         tile.style.display = 'none';
-
-        // Trigger Solution Animation
         setTimeout(solveMod6, 500);
-    });
+    };
 
     function solveMod6() {
         const unit1 = document.getElementById('unit1');
         const val1 = document.getElementById('val1');
         const denom3 = document.getElementById('denominator3');
         
-        // 1. Color the Start Unit (g) and its Value (2) RED
         unit1.classList.add('unit-match');
-        val1.classList.add('unit-match');
+        if(val1) val1.classList.add('unit-match');
         
-        // 2. Color the End Denominator (500 mg) BLUE
         denom3.style.color = "var(--primary-blue)";
         denom3.style.fontWeight = "bold";
 
@@ -626,10 +615,9 @@
 
     function resetMod6() {
         isExpanded = false;
+        tileSelected = false;
         
-        // Reset styles
         document.getElementById('formulaOverlay').style.display = 'flex';
-        // Need brief delay to allow display:flex to apply before opacity transition
         setTimeout(() => {
             document.getElementById('formulaOverlay').style.opacity = '1';
             document.getElementById('overlayGroup').classList.remove('slide-left');
@@ -637,11 +625,12 @@
         }, 50);
 
         document.getElementById('daTrack').classList.remove('visible');
-        document.getElementById('bridgeGap').innerHTML = 'Drop Here';
+        document.getElementById('bridgeGap').innerHTML = 'Tap Tile to Select';
         document.getElementById('bridgeGap').style.border = '2px dashed #ccc';
+        document.getElementById('bridgeGap').classList.remove('ready-to-receive');
         document.getElementById('tileTray').style.display = 'none';
         document.getElementById('convTile').style.display = 'block';
-        document.getElementById('convTile').style.opacity = '1';
+        document.getElementById('convTile').classList.remove('selected');
         document.getElementById('btnExpand').style.display = 'inline-block';
         document.getElementById('btnReset6').style.display = 'none';
         
@@ -649,15 +638,14 @@
         document.getElementById('finalResult').style.color = '#888';
         document.getElementById('finalResult').style.transform = "scale(1)";
 
-        // Remove Colors
         document.getElementById('unit1').classList.remove('unit-match');
-        const val1 = document.getElementById('val1');
-        if(val1) val1.classList.remove('unit-match');
+        const v1 = document.getElementById('val1');
+        if(v1) v1.classList.remove('unit-match');
 
-        const denom3 = document.getElementById('denominator3');
-        if(denom3) {
-            denom3.style.color = "";
-            denom3.style.fontWeight = "";
+        const d3 = document.getElementById('denominator3');
+        if(d3) {
+            d3.style.color = "";
+            d3.style.fontWeight = "";
         }
     }
 
@@ -690,65 +678,6 @@
         }
     }
 
-    // --- MOBILE TOUCH DRAG SUPPORT (ADDED) ---
-    function enableMobileDrag() {
-        const tile = document.getElementById('convTile');
-        const gap = document.getElementById('bridgeGap');
-        let startX, startY;
-
-        // 1. Touch Start
-        tile.addEventListener('touchstart', function(e) {
-            e.preventDefault(); 
-            const touch = e.touches[0];
-            const rect = tile.getBoundingClientRect();
-            
-            tile.style.position = 'fixed';
-            tile.style.left = rect.left + 'px';
-            tile.style.top = rect.top + 'px';
-            tile.style.zIndex = '1000';
-            tile.style.width = rect.width + 'px'; 
-            
-            startX = touch.clientX - rect.left;
-            startY = touch.clientY - rect.top;
-        }, {passive: false});
-
-        // 2. Touch Move
-        tile.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            tile.style.left = (touch.clientX - startX) + 'px';
-            tile.style.top = (touch.clientY - startY) + 'px';
-        }, {passive: false});
-
-        // 3. Touch End
-        tile.addEventListener('touchend', function(e) {
-            const touch = e.changedTouches[0];
-            tile.style.display = 'none';
-            let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            tile.style.display = 'block';
-
-            if (elemBelow && (elemBelow === gap || gap.contains(elemBelow))) {
-                gap.classList.remove('drag-over');
-                gap.innerHTML = ''; 
-                const newTile = document.createElement('div');
-                newTile.className = 'da-fraction';
-                newTile.style.fontSize = '1.4rem';
-                newTile.innerHTML = `<span class="da-numerator math-highlight">1000 mg</span><span class="da-denominator unit-match">1 g</span>`;
-                gap.appendChild(newTile);
-                gap.style.border = '2px solid var(--success-color)';
-                tile.style.display = 'none';
-                tile.style.position = ''; 
-                setTimeout(solveMod6, 500);
-            } else {
-                tile.style.position = '';
-                tile.style.left = '';
-                tile.style.top = '';
-                tile.style.zIndex = '';
-                tile.style.width = '';
-            }
-        });
-    }
-
     // --- INITIALIZATION ---
     createTicks('ticks_m1');
     document.getElementById('slider_m1').addEventListener('input', () => updateApparatus('m1', 1));
@@ -765,9 +694,6 @@
     document.getElementById('startDose').addEventListener('input', updateConverter);
     document.getElementById('slider_m5').addEventListener('input', updateMod5);
     
-    // Enable Mobile Drag Support
-    enableMobileDrag();
-
 </script>
 
 </body>
