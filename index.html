@@ -311,6 +311,7 @@
     <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">1 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m1"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m1"><span class="dose-label-internal" id="label_m1"></span></div></div><div class="slider-wrapper"><input type="range" id="slider_m1" min="0" max="5" step="0.5" value="0"></div><div class="readout-panel" aria-live="polite"><span>Volume: <span id="vol_m1">0.0</span> mL</span><span>Dose: <span id="dose_m1">0.0</span> mg</span></div></div></div>
     <div class="nav-row"><button class="nav-button" onclick="switchModule(2)">Next Module ➔</button></div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <div id="module2" class="widget-container" style="display:none;">
@@ -318,6 +319,7 @@
     <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">2 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m2"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m2"><span class="dose-label-internal" id="label_m2"></span></div></div><div class="slider-wrapper"><input type="range" id="slider_m2" min="0" max="5" step="0.5" value="0"></div><div class="readout-panel" aria-live="polite"><span>Volume: <span id="vol_m2">0.0</span> mL</span><span>Dose: <span id="dose_m2">0.0</span> mg</span></div></div></div>
     <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(1)">Back</button><button class="nav-button" onclick="switchModule(3)">Next Module ➔</button></div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <div id="module3" class="widget-container" style="display:none;">
@@ -325,6 +327,7 @@
     <div class="apparatus-row"><div class="left-assembly" aria-hidden="true"><div class="vial"><div class="vial-label">2 mg / 1 mL</div></div><div class="vial-stopper"></div><div class="needle"></div></div><div class="right-assembly"><div class="ticks-container" id="ticks_m3"></div><div class="syringe-barrel"><div class="liquid" id="liquid_m3"><span class="dose-label-internal" id="label_m3"></span></div></div><div class="order-panel"><button class="order-btn" onclick="runOrder(4)">Order: 4 mg</button><button class="order-btn" onclick="runOrder(6)">Order: 6 mg</button><button class="order-btn" onclick="runOrder(8)">Order: 8 mg</button></div><div class="readout-panel" id="formula_m3" aria-live="polite" style="justify-content: center; text-align: center;"><span style="color:#666; font-weight:normal;">Select an order above...</span></div></div></div>
     <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(2)">Back</button><button class="nav-button" onclick="switchModule(4)">Next Module ➔</button></div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <div id="module4" class="widget-container" style="display:none;">
@@ -332,6 +335,7 @@
     <div class="converter-container"><div class="input-group"><label for="startDose" style="display:block; margin-bottom:5px; color:#666;">Starting Dose (mg)</label><input type="number" id="startDose" class="dose-input" value="5" min="0" placeholder="0"></div><div class="unit-scale-wrapper"><div class="unit-track"><div class="unit-label" id="lbl_g">g</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label active" id="lbl_mg">mg</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_mcg">mcg</div></div><input type="range" id="slider_m4" class="scalloped-slider" min="0" max="6" step="1" value="3"></div><div class="result-display" aria-live="polite"><span id="result_num">5</span><span id="result_unit" class="result-unit">mg</span></div></div>
     <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(3)">Back</button><button class="nav-button" onclick="switchModule(5)">Next Module ➔</button></div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <div id="module5" class="widget-container" style="display:none;">
@@ -340,6 +344,7 @@
     <div class="converter-container"><div class="unit-scale-wrapper"><div class="unit-track"><div class="unit-label active" id="lbl_m5_g">g</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_m5_mg">mg</div><div class="dot">&middot;</div><div class="dot">&middot;</div><div class="unit-label" id="lbl_m5_mcg">mcg</div></div><input type="range" id="slider_m5" class="scalloped-slider" min="0" max="6" step="1" value="0"></div><div class="formula-box"><div class="fraction"><span class="numerator" id="num_m5">2 g</span><span class="denominator">500 mg</span></div><span>&times; 1 tab =&nbsp;</span><strong id="result_m5" style="font-size:1.4rem; color:#888;">...</strong></div></div>
     <div class="nav-row"><button class="nav-button secondary" onclick="switchModule(4)">Back</button><button class="nav-button" onclick="switchModule(6)">Next Module ➔</button></div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <div id="module6" class="widget-container" style="display:none;">
@@ -408,6 +413,7 @@
         <button id="btnReset6" class="nav-button secondary" style="display:none;" onclick="resetMod6()">Reset</button>
     </div>
     <div class="legal-footer">For educational purposes only. Not a clinical tool.</div>
+    <div style="text-align:center; margin-top:0.75rem;"><img src="beal_logo_blue_sm.webp" alt="Logo" style="max-width:120px; height:auto;"></div>
 </div>
 
 <script>
