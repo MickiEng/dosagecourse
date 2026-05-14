@@ -279,11 +279,11 @@
         .math-highlight { color: var(--primary-blue); transform: scale(1.1); display: inline-block; }
 
         @media (max-width: 700px) {
-            .widget-container { transform-origin: top center; transform: scale(0.8); margin-top: 0; }
+            .widget-container { width: 100%; min-width: unset; box-sizing: border-box; margin-top: 0; padding: 1.5rem; }
+            body { padding-top: 10px; align-items: flex-start; }
         }
         @media (max-width: 500px) {
-            body { padding-top: 10px; }
-            .widget-container { transform: scale(0.55); padding: 1rem; }
+            .widget-container { padding: 1rem; }
         }
 
         /* --- FIXES FOR MOBILE --- */
