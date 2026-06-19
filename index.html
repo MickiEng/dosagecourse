@@ -38,9 +38,9 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 2rem 3rem;
-            width: fit-content;
-            min-width: 400px;
+            width: 700px;
             max-width: 95%;
+            box-sizing: border-box;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: relative;
         }
@@ -82,7 +82,7 @@
         .vial-label { background: #fff; border: 1px solid #999; padding: 4px 8px; text-align: center; font-weight: bold; font-size: 0.85rem; line-height: 1.2; }
         .vial-stopper { width: 12px; height: 50px; background-color: #999; border: 1px solid #666; border-left: none; border-radius: 0 4px 4px 0; position: relative; z-index: 3; }
         .needle { width: 50px; height: 4px; background-color: #777; margin-right: -2px; z-index: 1; }
-        .right-assembly { display: flex; flex-direction: column; width: 450px; position: relative; }
+        .right-assembly { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; }
         .syringe-barrel { height: 70px; width: 100%; border: 3px solid var(--glass-border); border-left: 6px solid #444; border-radius: 4px 8px 8px 4px; background: rgba(255,255,255,0.4); position: relative; box-sizing: border-box; display: flex; align-items: center; }
         .liquid { height: 100%; background-color: var(--liquid-color); width: 0%; border-right: 4px solid var(--liquid-border); position: relative; overflow: visible; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         
@@ -241,7 +241,7 @@
             transition: all 0.3s;
         }
         
-        /* New Click-to-Place states */
+        /* Tile & Gap states (tap + drag) */
         .conv-tile.selected {
             border: 3px solid var(--primary-blue);
             box-shadow: 0 0 10px rgba(0, 86, 179, 0.4);
@@ -253,6 +253,12 @@
             background-color: #e8f0fe !important;
             color: var(--primary-blue) !important;
             cursor: pointer;
+        }
+
+        .bridge-gap.drag-over {
+            border: 2px dashed var(--primary-blue) !important;
+            background-color: #e8f0fe !important;
+            transform: scale(1.05);
         }
 
         .tile-tray {
@@ -267,10 +273,14 @@
             border: 2px solid var(--order-btn-color);
             border-radius: 8px;
             padding: 5px 15px;
-            cursor: pointer;
+            cursor: grab;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.2s;
             user-select: none;
+        }
+        .conv-tile.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
         }
 
         .mult-x { font-size: 1.5rem; color: #777; margin: 0 5px; }
@@ -279,7 +289,7 @@
         .math-highlight { color: var(--primary-blue); transform: scale(1.1); display: inline-block; }
 
         @media (max-width: 700px) {
-            .widget-container { width: 100%; min-width: unset; box-sizing: border-box; margin-top: 0; padding: 1.5rem; }
+            .widget-container { width: 100%; margin-top: 0; padding: 1.5rem; }
             body { padding-top: 10px; align-items: flex-start; }
         }
         @media (max-width: 500px) {
@@ -546,10 +556,11 @@
         }
     }
 
-    // --- MODULE 6: THE BRIDGE LOGIC (CLICK-TO-PLACE) ---
+    // --- MODULE 6: DRAG & DROP (desktop) + TAP-TO-PLACE (touch) ---
     let isExpanded = false;
     let tileSelected = false;
-    
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
     function expandEquation() {
         if(isExpanded) return;
         isExpanded = true;
@@ -561,32 +572,24 @@
         setTimeout(() => {
             document.getElementById('formulaOverlay').style.opacity = '0';
             document.getElementById('daTrack').classList.add('visible');
-            
+
             setTimeout(() => {
                 document.getElementById('formulaOverlay').style.display = 'none';
-                document.getElementById('tileTray').style.display = 'flex';
+                const tray = document.getElementById('tileTray');
+                tray.style.display = 'flex';
+                // Wire up the right interaction after tray is visible
+                setupMod6Interactions();
             }, 500);
         }, 600);
     }
 
-    const tile = document.getElementById('convTile');
-    const gap = document.getElementById('bridgeGap');
-
-    // Select the Tile
-    tile.onclick = function() {
-        tileSelected = true;
-        tile.classList.add('selected');
-        gap.classList.add('ready-to-receive');
-        gap.textContent = "Tap here to place";
-    };
-
-    // Place in the Gap
-    gap.onclick = function() {
-        if (!tileSelected) return;
-
-        gap.innerHTML = ''; 
+    function placeTileInGap() {
+        const gap = document.getElementById('bridgeGap');
+        const tile = document.getElementById('convTile');
+        gap.innerHTML = '';
         gap.classList.remove('ready-to-receive');
-        
+        gap.classList.remove('drag-over');
+
         const newTile = document.createElement('div');
         newTile.className = 'da-fraction';
         newTile.style.fontSize = '1.4rem';
@@ -596,19 +599,77 @@
         `;
         gap.appendChild(newTile);
         gap.style.border = '2px solid var(--success-color)';
-        
+
         tile.style.display = 'none';
         setTimeout(solveMod6, 500);
-    };
+    }
+
+    function setupMod6Interactions() {
+        const tile = document.getElementById('convTile');
+        const gap = document.getElementById('bridgeGap');
+
+        if (isTouchDevice) {
+            // --- TAP MODE ---
+            gap.textContent = 'Tap tile';
+            tile.style.cursor = 'pointer';
+
+            tile.onclick = function() {
+                tileSelected = true;
+                tile.classList.add('selected');
+                gap.classList.add('ready-to-receive');
+                gap.textContent = 'Tap here to place';
+            };
+
+            gap.onclick = function() {
+                if (!tileSelected) return;
+                placeTileInGap();
+            };
+
+        } else {
+            // --- DRAG & DROP MODE ---
+            gap.textContent = 'Drop here';
+            tile.setAttribute('draggable', 'true');
+            tile.style.cursor = 'grab';
+
+            tile.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', 'convTile');
+                setTimeout(() => tile.classList.add('dragging'), 0);
+                gap.classList.add('ready-to-receive');
+            });
+
+            tile.addEventListener('dragend', () => {
+                tile.classList.remove('dragging');
+                gap.classList.remove('ready-to-receive');
+                gap.classList.remove('drag-over');
+            });
+
+            gap.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                gap.classList.add('drag-over');
+            });
+
+            gap.addEventListener('dragleave', () => {
+                gap.classList.remove('drag-over');
+            });
+
+            gap.addEventListener('drop', (e) => {
+                e.preventDefault();
+                gap.classList.remove('drag-over');
+                placeTileInGap();
+            });
+        }
+    }
 
     function solveMod6() {
         const unit1 = document.getElementById('unit1');
         const val1 = document.getElementById('val1');
         const denom3 = document.getElementById('denominator3');
-        
+
         unit1.classList.add('unit-match');
         if(val1) val1.classList.add('unit-match');
-        
+
         denom3.style.color = "var(--primary-blue)";
         denom3.style.fontWeight = "bold";
 
@@ -624,7 +685,7 @@
     function resetMod6() {
         isExpanded = false;
         tileSelected = false;
-        
+
         document.getElementById('formulaOverlay').style.display = 'flex';
         setTimeout(() => {
             document.getElementById('formulaOverlay').style.opacity = '1';
@@ -632,19 +693,25 @@
             document.getElementById('overlayMult').classList.remove('slide-right');
         }, 50);
 
+        const gap = document.getElementById('bridgeGap');
         document.getElementById('daTrack').classList.remove('visible');
-        document.getElementById('bridgeGap').innerHTML = 'Tap tile';
-        document.getElementById('bridgeGap').style.border = '2px dashed #ccc';
-        document.getElementById('bridgeGap').classList.remove('ready-to-receive');
+        gap.innerHTML = isTouchDevice ? 'Tap tile' : 'Drop here';
+        gap.style.border = '2px dashed #ccc';
+        gap.classList.remove('ready-to-receive');
+        gap.classList.remove('drag-over');
+
+        const tile = document.getElementById('convTile');
         document.getElementById('tileTray').style.display = 'none';
-        document.getElementById('convTile').style.display = 'block';
-        document.getElementById('convTile').classList.remove('selected');
+        tile.style.display = 'block';
+        tile.classList.remove('selected');
+        tile.classList.remove('dragging');
+
         document.getElementById('btnExpand').style.display = 'inline-block';
         document.getElementById('btnReset6').style.display = 'none';
-        
+
         document.getElementById('finalResult').textContent = '?';
         document.getElementById('finalResult').style.color = '#888';
-        document.getElementById('finalResult').style.transform = "scale(1)";
+        document.getElementById('finalResult').style.transform = 'scale(1)';
 
         document.getElementById('unit1').classList.remove('unit-match');
         const v1 = document.getElementById('val1');
@@ -652,8 +719,8 @@
 
         const d3 = document.getElementById('denominator3');
         if(d3) {
-            d3.style.color = "";
-            d3.style.fontWeight = "";
+            d3.style.color = '';
+            d3.style.fontWeight = '';
         }
     }
 
